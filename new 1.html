@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PM Copilot :: Intelligent Risk Radar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Minimalist CSS Style --- */
+        :root {
+            --bg-main: #FFFFFF;
+            --bg-alt: #F7FAFC;
+            --text-main: #1A202C;
+            --text-muted: #718096;
+            --primary: #3182CE;
+            --border: #E2E8F0;
+            --risk-low: #C6F6D5;
+            --risk-med: #FEEBC8;
+            --risk-high: #FED7D7;
+            --font-main: 'Inter', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-alt);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 40px;
+        }
+
+        .logo-section h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-section p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin: 4px 0 0;
+        }
+
+        .api-status {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .api-status-dot {
+            height: 8px;
+            width: 8px;
+            border-radius: 50%;
+            background-color: #CBD5E0; /* Idle */
+        }
+
+        /* Ingestion Zone */
+        .ingestion-zone {
+            background-color: var(--bg-main);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .ingestion-zone h2 {
+            font-size: 18px;
+            margin: 0 0 10px;
+        }
+
+        .ingestion-zone p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin: 0 0 20px;
+        }
+
+        .upload-btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s;
+        }
+
+        .upload-btn:hover {
+            background-color: #2B6CB0;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .dashboard-panel {
+            background-color: var(--bg-main);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .panel-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Risk Radar */
+        #riskRadar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .risk-item {
+            display: grid;
+            grid-template-columns: 100px 1fr 60px;
+            align-items: center;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .risk-item-id { font-weight: 600; }
+        .risk-item-summary { color: var(--text-main); }
+        .risk-score-badge {
+            font-weight: 700;
+            text-align: center;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        /* Risk Score Colors */
+        .score-low { background-color: var(--risk-low); color: #22543D; }
+        .score-med { background-color: var(--risk-med); color: #744210; }
+        .score-high { background-color: var(--risk-high); color: #742A2A; }
+
+        /* AI Agents Insights */
+        #aiInsights {
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .insight-card {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: var(--bg-alt);
+            border: 1px solid var(--border);
+        }
+
+        .insight-card-header { font-weight: 600; color: var(--primary); margin-bottom: 8px;}
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            margin: 20px auto;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo-section">
+            <h1>PM Copilot</h1>
+            <p>Intelligent Project Risk Archeologist</p>
+        </div>
+        <div class="api-status">
+            <span class="api-status-dot" id="apiDot"></span>
+            <span id="apiStatusText">AI Agent Idle</span>
+        </div>
+    </header>
+
+    <div class="ingestion-zone">
+        <h2>📂 Ingest Project Data</h2>
+        <p>Upload a simulated Jira task export (CSV) to activate the Risk Radar.</p>
+        <label for="fileInput" class="upload-btn">Upload Simulated Jira CSV</label>
+        <input type="file" id="fileInput" accept=".csv">
+    </div>
+
+    <div class="dashboard">
+        <div class="dashboard-panel">
+            <div class="panel-header">
+                <h3>Live Risk Radar</h3>
+                <span id="projectSummary" style="font-size: 12px; color: var(--text-muted);">0 Tasks Analyzed</span>
+            </div>
+            <div class="spinner" id="loadingSpinner"></div>
+            <div id="riskRadar">
+                <p style="text-align: center; color: var(--text-muted); font-size: 14px;">Ingest data to see the live risk distribution.</p>
+            </div>
+        </div>
+
+        <div class="dashboard-panel">
+            <div class="panel-header">
+                <h3>AI Agent Insights</h3>
+            </div>
+            <div id="aiInsights">
+                <p style="text-align: center; color: var(--text-muted); font-size: 14px;">Waiting for data analysis...</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>A functional Proof-of-Concept by [Your Name] | Powered by Gemini 1.5 Pro Agentic Analysis</p>
+        <p style="margin-top: 8px;">For LinkedIn Demonstration Purposes Only.</p>
+    </footer>
+
+</div>
+
+<script>
+    // --- CONFIGURATION (FOR LOCAL TESTING ONLY) ---
+    // PASTE YOUR GEMINI API KEY HERE. DO NOT SHARE THIS FILE.
+    const GEMINI_API_KEY = "YOUR_API_KEY_HERE"; 
+    const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+
+    // --- UI ELEMENTS ---
+    const fileInput = document.getElementById('fileInput');
+    const riskRadar = document.getElementById('riskRadar');
+    const aiInsights = document.getElementById('aiInsights');
+    const projectSummary = document.getElementById('projectSummary');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const apiDot = document.getElementById('apiDot');
+    const apiStatusText = document.getElementById('apiStatusText');
+
+    // --- MAIN APP LOGIC ---
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        showLoading(true);
+        updateApiStatus('active', 'AI Agent Analyzing Data...');
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const csvData = e.target.result;
+            processJiraData(csvData);
+        };
+        reader.readAsText(file);
+    });
+
+    // 1. Process CSV Data & Calculate Basic Risk
+    async function processJiraData(csv) {
+        // Simple CSV Parser (Assumes standard format)
+        const lines = csv.split('\n');
+        const headers = lines[0].split(',');
+        const tasks = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            const currentLine = lines[i].split(',');
+            if (currentLine.length === headers.length) {
+                const task = {};
+                for (let j = 0; j < headers.length; j++) {
+                    task[headers[j].trim()] = currentLine[j].trim();
+                }
+                tasks.push(task);
+            }
+        }
+
+        if (tasks.length === 0) {
+            alert("Error: Could not parse CSV data. Ensure it matches the example format.");
+            showLoading(false);
+            return;
+        }
+
+        // --- CALCULATE multivariate RISK SCORE ---
+        // Formula: Score = (Sentiment Risk * 2) + (Velocity Drop Risk)
+        // Sentiment (messy text): Analysed by AI
+        // Velocity (clean numbers): Calculated here
+        
+        const velocityRisk = calculateVelocityRisk(tasks);
+        
+        // --- CALL AI AGENT FOR sentiment ANALYIS ---
+        updateApiStatus('active', 'Performing AI Agentic Sentiment Analysis...');
+        const sentimentRisk = await analyzeSentimentWithAI(tasks);
+
+        const combinedRiskScore = (sentimentRisk * 2) + velocityRisk;
+        
+        // --- RENDER UI ---
+        renderRiskRadar(tasks, combinedRiskScore, velocityRisk, sentimentRisk);
+        renderAiInsights(combinedRiskScore, velocityRisk, sentimentRisk);
+
+        updateApiStatus('idle', 'Analysis Complete.');
+        projectSummary.innerText = `${tasks.length} Tasks Analyzed`;
+        showLoading(false);
+    }
+
+    // 2. Simple Math: Calculate Velocity Risk
+    function calculateVelocityRisk(tasks) {
+        // Simulated: We calculate how many tasks missed their 'velocity target'
+        const tasksOverdue = tasks.filter(t => t['Time Spent (h)'] > t['Original Estimate (h)']);
+        const riskRatio = tasksOverdue.length / tasks.length;
+        
+        if (riskRatio > 0.5) return 3; // High
+        if (riskRatio > 0.2) return 2; // Med
+        return 1; // Low
+    }
+
+    // 3. AI AGENT: Call Gemini API for Sentiment Analysis
+    async function analyzeSentimentWithAI(tasks) {
+        // Program the AI: Give it instructions for analyzing messy status text
+        const aiPrompt = `
+You are 'Retro-Sense AI,' an expert PM Agentic System.
+Analyze the 'Status Update' column from this list of project tasks.
+Identify the overall sentiment for the project on a scale of 1 to 3 (1=Optimistic/Routine, 2=Frustrated/Robotically Neutral, 3=Critical/Toxic).
+
+Return ONLY the number (1, 2, or 3). Do not provide any context.
+
+Tasks Data (Status Update column):
+${tasks.map(t => t['Status Update']).join('\n')}
+`;
+
+        try {
+            const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: aiPrompt }] }]
+                })
+            });
+
+            const data = await response.json();
+            const sentimentResult = data.contents[0].parts[0].text.trim();
+            
+            // Validate the result
+            return [1, 2, 3].includes(parseInt(sentimentResult)) ? parseInt(sentimentResult) : 2; // Default to neutral if AI fails
+
+        } catch (error) {
+            console.error("Gemini API Error:", error);
+            updateApiStatus('error', 'API Error. Check Key.');
+            return 2; // Default to neutral on error
+        }
+    }
+
+    // 4. Render the Live Risk Radar UI
+    function renderRiskRadar(tasks, combinedScore, velocityRisk, sentimentRisk) {
+        riskRadar.innerHTML = ''; // Clear loading message
+
+        // Determine Overall Project Risk Level
+        let overallLevel = 'Low';
+        let scoreClass = 'score-low';
+        if (combinedScore >= 7) { overallLevel = 'Critical'; scoreClass = 'score-high'; }
+        else if (combinedScore >= 5) { overallLevel = 'Moderate'; scoreClass = 'score-med'; }
+
+        // Simulated Jira tasks display with AI-calculated risk
+        tasks.slice(0, 5).forEach(task => { // Show first 5 tasks
+            const riskItem = document.createElement('div');
+            riskItem.className = `risk-item`;
+            riskItem.innerHTML = `
+                <div class="risk-item-id">${task['Task ID']}</div>
+                <div class="risk-item-summary">${task['Summary']}</div>
+                <div class="risk-score-badge ${getTaskScoreClass(task, combinedScore)}">${combinedScore}</div>
+            `;
+            riskRadar.appendChild(riskItem);
+        });
+        
+        // Add a "View All" placeholder
+        const viewAll = document.createElement('p');
+        viewAll.style.cssText = "text-align:center;font-size:12px;color:var(--text-muted);margin-top:10px;";
+        viewAll.innerText = "+ View all analysis...";
+        riskRadar.appendChild(viewAll);
+    }
+
+    // Determine task-specific score visualization
+    function getTaskScoreClass(task, combinedScore) {
+        if (combinedScore >= 7) return 'score-high';
+        if (combinedScore >= 5) return 'score-med';
+        return 'score-low';
+    }
+
+    // 5. Render AI Agent Insights (The "Wow" Output)
+    function renderAiInsights(combinedScore, velocityRisk, sentimentRisk) {
+        aiInsights.innerHTML = ''; // Clear loading message
+
+        let velocityMessage = velocityRisk >= 2 ? "Velocity Drop detected across key workstreams." : "Task completion velocity is stable.";
+        let sentimentMessage = sentimentRisk >= 2 ? "Agentic Sentiment Analysis flags rising team frustration." : "Sentiment remains collaborative/routine.";
+        
+        let actionableAlert = "PROACTIVE ALERT: No critical action required. Continue monitoring.";
+        if (combinedScore >= 7) {
+            actionableAlert = "⚠️ PROACTIVE ALERT: Multivariate Risk is CRITICAL. High frustration + velocity drop points to immediate burnout and missed milestones. Mandate a 'Discovery Spike' to review requirements.";
+        } else if (combinedScore >= 5) {
+            actionableAlert = "⚠️ PROACTIVE ALERT: Moderate Risk. Misalignment in status updates detected. A schedule variance is likely within the next sprint.";
+        }
+
+        // AI Agent Synthesis Card
+        const synthesisCard = document.createElement('div');
+        synthesisCard.className = 'insight-card';
+        synthesisCard.innerHTML = `
+            <div class="insight-card-header">Agentic Synthesis</div>
+            <p style="margin: 0; color: var(--text-main);">${actionableAlert}</p>
+        `;
+        aiInsights.appendChild(synthesisCard);
+
+        // Multivariate Drivers Card
+        const driversCard = document.createElement('div');
+        driversCard.className = 'insight-card';
+        driversCard.innerHTML = `
+            <div class="insight-card-header">Risk Drivers</div>
+            <p style="margin: 0; color: var(--text-muted);">
+                Sentiment Signal (AI Agentic Analysis): ${sentimentRisk}/3 <br>
+                Velocity Signal (Multivariate Logic): ${velocityRisk}/3
+            </p>
+        `;
+        aiInsights.appendChild(driversCard);
+    }
+
+    // --- UTILITIES ---
+    function showLoading(show) {
+        loadingSpinner.style.display = show ? 'block' : 'none';
+        riskRadar.style.display = show ? 'none' : 'block';
+    }
+
+    function updateApiStatus(status, text) {
+        apiStatusText.innerText = text;
+        if (status === 'active') {
+            apiDot.style.backgroundColor = var(--primary);
+        } else if (status === 'error') {
+            apiDot.style.backgroundColor = '#E53E3E';
+        } else {
+            apiDot.style.backgroundColor = '#CBD5E0';
+        }
+    }
+</script>
+
+</body>
+</html>
